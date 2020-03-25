@@ -51,7 +51,7 @@ io.on('connection', function(socket) {
 
 });
 
-server.listen(80, function() {
+server.listen(9090, function() {
     console.log('Socket IO server listening on port 9090');
 });
 
