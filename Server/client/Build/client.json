@@ -1,6 +1,6 @@
 {
 "companyName": "DefaultCompany",
-"productName": "WebGL Test",
+"productName": "Soccar",
 "productVersion": "0.1",
 "dataUrl": "client.data.unityweb",
 "wasmCodeUrl": "client.wasm.code.unityweb",
