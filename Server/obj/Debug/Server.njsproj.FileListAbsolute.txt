@@ -1,2 +1,4 @@
 C:\Users\hgKim\Documents\College\Project\soccar.io\Server\obj\Debug\Server.njsprojAssemblyReference.cache
 C:\Users\hgKim\Documents\College\Project\soccar.io\Server\bin\Microsoft.NodejsTools.WebRole.dll
+C:\Users\hgKim\Documents\College\4Grade\두드림\node.js server\Server\obj\Debug\Server.njsprojAssemblyReference.cache
+C:\Users\hgKim\Documents\College\4Grade\두드림\node.js server\Server\bin\Microsoft.NodejsTools.WebRole.dll
