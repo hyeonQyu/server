@@ -11,10 +11,41 @@ var io = require('socket.io')(server);
 app.use(compression());
 app.use(express.static(__dirname + '/client/'));
 
+const totalPlayer = 4;
 var playerIndex = 0;
 
+var timestamp = [];
+timestamp[0] = 0;
+timestamp[1] = 0;
+
+var isFirst = [];
+isFirst[0] = true;
+isFirst[1] = true;
+
+// ìƒëŒ€ìœ„ì¹˜ ì´ë™ì •ë„ ë° ì ˆëŒ€ìœ„ì¹˜ë¥¼ ë³´ê´€
+var playersPositions = [];
+for(var i = 0; i < 2; i++){
+    var playersPosition = new Object();
+    var positions = [];
+    for(var j = 0; j < totalPlayer; j++){
+        var position = new Object();
+        position.x = 0;
+        position.y = 0;
+        position.z = 0;
+
+        positions.push(position);
+    }
+    playersPosition.Positions = positions;
+    playersPositions.push(playersPosition);
+}
+
+playersPositions[1].Positions = positions;
+playersPositions[1].Positions[1].x = -0.09;
+playersPositions[1].Positions[1].y = 3;
+playersPositions[1].Positions[1].z = -8.6;
+
 app.get('/', function(req, res) {
-    
+
 });
 
 io.on('connection', function(socket) {
@@ -23,8 +54,7 @@ io.on('connection', function(socket) {
 
     socket.on('start_button', function(data) {
         console.log('start_button ' + data);
-        
-        // Å¬¶óÀÌ¾ğÆ®°¡ °ÔÀÓ ½ÃÀÛ ¹öÆ°À» ´­·¶À¸¸é °ÔÀÓ ½ÃÀÛ ¸Ş½ÃÁö Àü¼Û
+
         if(data == GAME_START) {
             socket.emit('start_button', GAME_START);
         }
@@ -33,39 +63,79 @@ io.on('connection', function(socket) {
     socket.on('request_player_index', function(data) {
         console.log('request_player_index ' + data);
 
-        if(data == REQUEST_PLAYER_INDEX) {    
-            // Å¬¶óÀÌ¾ğÆ®¿¡°Ô ¹æÀ» Ã£¾ÆÁÖ°í ¾Ë¸ÂÀº ÇÃ·¹ÀÌ¾î ÀÎµ¦½º¸¦ Àü¼Û
+        if(data == REQUEST_PLAYER_INDEX) {
+            // í´ë¼ì´ì–¸íŠ¸ì—ê²Œ í”Œë ˆì´ì–´ ì¸ë±ìŠ¤ ì „ì†¡
             var playerIndexString = playerIndex.toString();
             socket.emit('request_player_index', playerIndexString);
             playerIndex++;
         }
     });
 
-    socket.on('player_motion', function(data) {
-        console.log('player_motion');
-        console.log('player_motion ' + data.X + ' ' + data.Y + ' ' + data.Z);
-        
-        // ÇØ´ç °ÔÀÓ¹æ¿¡ ÀÖ´Â ¸ğµç Å¬¶óÀÌ¾ğÆ®¿¡°Ô À§Ä¡ Á¤º¸ Àü¼Û
-        io.emit('player_motion', data);
+    socket.on('relative_position', function(data) {
+        if(isFirst[0]){
+            timestamp[0] = Date.now();
+            isFirst[0] = false;
+        }
+
+        //console.log(data);
+        //console.log('player_motion ' + data.PlayerIndex);
+
+        playersPositions[0].Positions[data.PlayerIndex].x += data.Position.x;
+        playersPositions[0].Positions[data.PlayerIndex].y += data.Position.y;
+        playersPositions[0].Positions[data.PlayerIndex].z += data.Position.z;
+
+        // ì¼ì • ì‹œê°„ì´ ë˜ë©´ ê° í”Œë ˆì´ì–´ë“¤ì—ê²Œ ì„œë²„ì—ì„œ ëª¨ì€ ëª¨ë“  í”Œë ˆì´ì–´ë“¤ì˜ ìœ„ì¹˜ë¥¼ ì „ì†¡
+        if(Date.now() - timestamp[0] > 20){
+            var datas = JSON.stringify(playersPositions[0]);
+
+            //console.log(datas);
+            io.emit('relative_position', datas);
+            for(var i = 0; i < totalPlayer; i++){
+                playersPositions[0].Positions[i].x = 0;
+                playersPositions[0].Positions[i].y = 0;
+                playersPositions[0].Positions[i].z = 0;
+            }
+
+            timestamp[0] = Date.now();
+        }
+
+    });
+
+    socket.on('absolute_position', function(data){
+        if(isFirst[1]){
+            timestamp[1] = Date.now();
+            isFirst[1] = false;
+        }
+
+        playersPositions[1].Positions[data.PlayerIndex].x = data.Position.x;
+        playersPositions[1].Positions[data.PlayerIndex].y = data.Position.y;
+        playersPositions[1].Positions[data.PlayerIndex].z = data.Position.z;
+
+        // ì¼ì • ì‹œê°„ì´ ë˜ë©´ ëª¨ë“  í”Œë ˆì´ì–´ì˜ ìœ„ì¹˜ë¥¼ ì„œë²„ì—ì„œ ë³´ê´€í•œ ìœ„ì¹˜ë¡œ ë§ì¶¤
+        if(Date.now() - timestamp[1] > 500){
+            var datas = JSON.stringify(playersPositions[1]);
+            io.emit('absolute_position', datas);
+            timestamp[1] = Date.now();
+        }
     });
 
 });
 
-server.listen(80, function() {
-    console.log('Socket IO server listening on port 80');
+server.listen(9090, function() {
+    console.log('Socket IO server listening on port 9090');
 });
 
 
 
 
-    //// Á¢¼ÓµÈ ¸ğµç Å¬¶óÀÌ¾ğÆ®¿¡°Ô ¸Ş½ÃÁö¸¦ Àü¼ÛÇÑ´Ù
+    //// ï¿½ï¿½ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½Ş½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½
     //io.emit('event_name', msg);
 
-    //// ¸Ş½ÃÁö¸¦ Àü¼ÛÇÑ Å¬¶óÀÌ¾ğÆ®¿¡°Ô¸¸ ¸Ş½ÃÁö¸¦ Àü¼ÛÇÑ´Ù
+    //// ï¿½Ş½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ï¿½Ô¸ï¿½ ï¿½Ş½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½
     //socket.emit('event_name', msg);
 
-    //// ¸Ş½ÃÁö¸¦ Àü¼ÛÇÑ Å¬¶óÀÌ¾ğÆ®¸¦ Á¦¿ÜÇÑ ¸ğµç Å¬¶óÀÌ¾ğÆ®¿¡°Ô ¸Ş½ÃÁö¸¦ Àü¼ÛÇÑ´Ù
+    //// ï¿½Ş½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½Ş½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½
     //socket.broadcast.emit('event_name', msg);
 
-    //// Æ¯Á¤ Å¬¶óÀÌ¾ğÆ®¿¡°Ô¸¸ ¸Ş½ÃÁö¸¦ Àü¼ÛÇÑ´Ù
+    //// Æ¯ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ï¿½Ô¸ï¿½ ï¿½Ş½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½
     //io.to(id).emit('event_name', data);
