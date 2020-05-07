@@ -98,9 +98,9 @@ io.on('connection', function(socket) {
             isFirst[1] = false;
 
             for(var i = 0; i < totalPlayer; i++){
-                playersPosition[1].Positions[i].x = j * 5;
-                playersPosition[1].Positions[i].y = 3.5;
-                playersPosition[1].Positions[i].z = j * 5;
+                playersPositions[1].Positions[i].x = j * 5;
+                playersPositions[1].Positions[i].y = 3.5;
+                playersPositions[1].Positions[i].z = j * 5;
             }
         }
 
