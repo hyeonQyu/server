@@ -30,7 +30,7 @@ for(var i = 0; i < 2; i++){
     for(var j = 0; j < totalPlayer; j++){
         var position = new Object();
         position.x = j * 5;
-        position.y = 10;
+        position.y = 3.5;
         position.z = j * 5;
 
         positions.push(position);
@@ -96,6 +96,12 @@ io.on('connection', function(socket) {
         if(isFirst[1]){
             timestamp[1] = Date.now();
             isFirst[1] = false;
+
+            for(var i = 0; i < totalPlayer; i++){
+                playersPosition[1].Positions[i].x = j * 5;
+                playersPosition[1].Positions[i].y = 3.5;
+                playersPosition[1].Positions[i].z = j * 5;
+            }
         }
 
         //  슈퍼클라이언트에게서 공의 절대위치 수신
