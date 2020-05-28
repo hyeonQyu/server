@@ -210,6 +210,8 @@ io.on('connection', function(socket) {
         sendingData.Message = data.Message;
         var datas = JSON.stringify(sendingData);
 
+        console.log('chat ' + data.Message);
+
         io.sockets.in(data.RoomKey).emit('chat', datas);
     });
 
