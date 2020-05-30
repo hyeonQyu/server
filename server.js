@@ -205,13 +205,13 @@ io.on('connection', function(socket) {
     });
 
     socket.on('chat', function(data){
-        console.log('chat1 ' + data.Message);
+        console.log('chat1 ' + data);
         var sendingData = new Object();
         sendingData.PlayerKey = socket.id;
         sendingData.Message = data.Message;
         var datas = JSON.stringify(sendingData);
 
-        console.log('chat2 ' + data.Message);
+        console.log('chat2 ' + datas);
 
         io.sockets.in(data.RoomKey).emit('chat', datas);
     });
