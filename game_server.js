@@ -1,10 +1,18 @@
-var port = Number(process.argv.slice(2));
+var port = Number(process.argv.slice(2,3));
+var totalPlayer = Number(process.argv.slice(3));
 const GAME_START = 'start';
 const REQUEST_PLAYER_INDEX = 'req';
 
-var io = require('socket.io').listen(port);
+var express = require('express');
+var app = express();
 
-const totalPlayer = 4;
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
+//var io = require('socket.io').listen(port);
+
+
+console.log('PortNum='+port+' room starts game, Total_Player='+totalPlayer);
+
 var playerIndex = 0;
 
 var timestamp = [];
@@ -144,5 +152,8 @@ io.on('connection', function(socket) {
         */
     });
 
-
 });
+
+server.listen(port, function(){
+    console.log('game server listening on port ' + port);
+})
