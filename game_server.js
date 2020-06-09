@@ -9,7 +9,11 @@ var io = require('socket.io')(server);
 
 var TIME_STAMP = 0;
 
+var SUPER_CLIENT_INDEX = 0;
+
 var isFirst = true;
+
+var CONNECTED_CLIENT_COUNT = totalPlayer;
 
 // 상대위치 이동정도 및 절대위치를 보관
 var PLAYERS_POSITION = new Object();
@@ -27,12 +31,14 @@ PLAYERS_POSITION.Positions = positions;
 // 변수 초기화
 var INDEX_TO_SOCKET_ID = [];
 var SCORE_BOARD = [];
+var PLAYERS_NAME = [];
 for(var i = 0; i < totalPlayer; i++){
     INDEX_TO_SOCKET_ID.push('');
+    PLAYERS_NAME.push('');
     SCORE_BOARD.push(0);
 }
 
-var loadedPlayerIndex = [];
+var LOADED_PLAYER_INDEX = [];
 
 // 2개의 공 절대위치를 보관
 var ballsPositions = [];
@@ -61,12 +67,17 @@ io.on('connection', function(socket) {
     });
 
     socket.on('complete_loading', function(data) {
-        var playerIndex = data;
-        if(loadedPlayerIndex.indexOf(playerIndex) == -1){
-            loadedPlayerIndex.push(playerIndex);
+        var playerIndex = data.PlayerIndex;
+        var playerName = data.PlayerName;
+        if(LOADED_PLAYER_INDEX.indexOf(playerIndex) == -1){
+            LOADED_PLAYER_INDEX.push(playerIndex);
+            PLAYERS_NAME[playerIndex] = playerName;
         }
-        if(loadedPlayerIndex.length == totalPlayer){
-            io.emit('kick_off', '');
+        if(LOADED_PLAYER_INDEX.length == totalPlayer){
+            var sendingData = new Object();
+            sendingData.PlayerNames = PLAYERS_NAME;
+            var datas = JSON.stringify(sendingData);
+            io.emit('kick_off', datas);
         }
     });
 
@@ -83,7 +94,7 @@ io.on('connection', function(socket) {
         }
 
         //  슈퍼클라이언트에게서 공의 절대위치 수신
-        if(data.PlayerIndex == 0){
+        if(data.PlayerIndex == SUPER_CLIENT_INDEX){
             for(var i = 0; i < 2; i++){
                 ballsPositions[i].x = data.BallPositions[i].x;
                 ballsPositions[i].y = data.BallPositions[i].y;
@@ -109,6 +120,10 @@ io.on('connection', function(socket) {
         }
     });
 
+    socket.on('change_super_client', function(data){
+        SUPER_CLIENT_INDEX  = data;
+    });
+
     socket.on('score', function(data){
         // data = (Scorer,  Conceder, IsFeverBall);
         var scorer = data.Scorer;
@@ -116,7 +131,13 @@ io.on('connection', function(socket) {
         var flag = data.IsFeverBall;
 
         // 골 점수 처리하는 부분
-        if(flag == 1){
+        if(scorer == conceder){
+            SCORE_BOARD[scorer] -= 1;
+            if(SCORE_BOARD[scorer] < 0){
+                SCORE_BOARD[scorer] = 0;
+            }
+        }
+        else if(flag == 1){
             SCORE_BOARD[scorer] += 3;
             SCORE_BOARD[conceder] -= 2;
             if(SCORE_BOARD[conceder] < 0){
@@ -149,13 +170,17 @@ io.on('connection', function(socket) {
             }
         }
         console.log(i+"player is disconnected in "+ port+' '+socket.id);
+        CONNECTED_CLIENT_COUNT -= 1;
+        if(CONNECTED_CLIENT_COUNT == 0){
+            process.exit(1);
+        }
         io.emit('disconnection', JSON.stringify(i));
     });
 
     socket.on('disconnection', function(data) {
         console.log('in disconnection '+ socket.id);
         socket.disconnect(true);
-    })
+    });
 
 });
 
