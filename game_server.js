@@ -271,9 +271,10 @@ io.on('connection', function(socket) {
             }
         }
         console.log(disconnectedIndex+"player is disconnected in "+ port+' '+socket.id);
+        SCORE_BOARD[disconnectedIndex] = -1;
         CONNECTED_CLIENT_COUNT -= 1;
 
-        if(CONNECTED_CLIENT_COUNT == 1){
+        if(!isEnd && CONNECTED_CLIENT_COUNT == 1){
             var winnerIndex = 0;
             for(var j = 1; j < totalPlayer; j++){
                 if(SCORE_BOARD[j] < SCORE_BOARD[winnerIndex]){
